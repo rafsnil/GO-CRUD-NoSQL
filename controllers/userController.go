@@ -57,6 +57,55 @@ func (uc *UserController) GetUser(w http.ResponseWriter, r *http.Request, params
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	fmt.Fprintf(w, "%s/n", user_json)
-	w.Write(user_json)
+	fmt.Fprintf(w, "%s\n", user_json)
+	// w.Write(user_json)
+}
+
+// CREATE USER CONTROLLER
+func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	userId := bson.NewObjectId()
+	user := models.User{
+		Id: userId,
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.Decode(&user)
+
+	// json.NewDecoder(r.Body).Decode(&user)
+	// user.Id := bson.NewObjectId()
+
+	uc.session.DB("Mongo-Golang-CRUD").C("Users").Insert(user)
+
+	user_json, err := json.Marshal(user)
+	if err != nil {
+		fmt.Println("Error while Parsing in CREATE USER")
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	fmt.Fprintf(w, "%s\n", user_json)
+	// w.Write(user_json)
+
+}
+
+// DELETE USER HANDLER
+func (uc UserController) DeleteUser(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	id := params.ByName("id")
+
+	if !bson.IsObjectIdHex(id) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	oid := bson.ObjectIdHex(id)
+
+	err := uc.session.DB("Mongo-Golang-CRUD").C("Users").RemoveId(oid)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Deleted user", oid, "\n")
+
 }

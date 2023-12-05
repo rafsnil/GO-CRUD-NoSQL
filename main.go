@@ -16,18 +16,19 @@ func main() {
 	uc := controllers.NewUserController(getSession())
 
 	router.GET("/user/:id", uc.GetUser)
-	router.POST("", uc.CreateUser)
-	router.DELETE("", uc.DeleteUser)
+	router.POST("/user", uc.CreateUser)
+	router.DELETE("/user/:id", uc.DeleteUser)
 
 	http.ListenAndServe("localhost:9000", router)
 }
 
 // Connecting to DB
 // What does mgo.Session do here?
+// Dial returns a *mgo.Session which is stored in "session" and returned
 func getSession() *mgo.Session {
-	session, err := mgo.Dial("mongodb://localhost:27107")
+	session, err := mgo.Dial("mongodb://localhost:27017")
 	if err != nil {
-		fmt.Println("Could Not Connect to DB")
+		panic(err)
 	}
 	fmt.Println("Connected to DB!😁")
 	return session
